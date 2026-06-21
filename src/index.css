@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+  background: #1b1f20;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  width: 100vw;
+  min-width: 0;
+  min-height: 100dvh;
+  background: #1b1f20;
+  overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
