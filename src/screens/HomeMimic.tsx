@@ -1,6 +1,5 @@
 import { CapacityBar } from '../components/CapacityBar'
 import { ValueTile } from '../components/ValueTile'
-import type { CSSProperties } from 'react'
 import type { AppState, ScreenId } from '../types'
 
 interface HomeMimicProps {
@@ -43,11 +42,7 @@ export function HomeMimic({ state, setScreen }: HomeMimicProps) {
               <span className="rotor rotor-a" />
               <span className="rotor rotor-b" />
             </div>
-            <FlowTrack className="air-intake" count={4} />
-            <FlowTrack className="air-discharge" count={3} />
-            <FlowTrack className="air-cooler" count={4} />
-            <FlowTrack className="oil-drop" count={3} />
-            <FlowTrack className="oil-return" count={5} />
+            <FlowOverlay />
           </div>
           <ValueTile className="temp-readout" label="Discharge Temp" value={r.dischargeTemp.toFixed(0)} unit="F" tone={r.dischargeTemp > 210 ? 'warning' : 'normal'} />
           <ValueTile className="sump-readout" label="Sump Pressure" value={r.sumpPressure.toFixed(0)} unit="psig" />
@@ -61,13 +56,97 @@ export function HomeMimic({ state, setScreen }: HomeMimicProps) {
   )
 }
 
-function FlowTrack({ className, count }: { className: string; count: number }) {
+function FlowOverlay() {
   return (
-    <div className={`flow-track ${className}`}>
-      {Array.from({ length: count }, (_, index) => (
-        <span key={index} style={{ '--flow-index': index } as CSSProperties} />
+    <svg className="mimic-flow-svg" viewBox="0 0 1716 966" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="air-flow-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="oil-flow-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="2.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <FlowPath
+        id="air-intake-flow"
+        className="air-flow"
+        path="M330 224 H650 Q692 224 692 266 V377"
+        count={5}
+        duration={1.8}
+      />
+      <FlowPath
+        id="air-discharge-flow"
+        className="air-flow"
+        path="M885 526 H928 Q962 526 962 492 Q962 469 1000 469 H1137"
+        count={4}
+        duration={1.5}
+      />
+      <FlowPath
+        id="air-cooler-flow"
+        className="air-flow"
+        path="M1219 345 V281 Q1219 231 1268 231 H1367"
+        count={3}
+        duration={1.4}
+      />
+      <FlowPath
+        id="air-outlet-flow"
+        className="air-flow"
+        path="M1562 370 H1678"
+        count={3}
+        duration={1.2}
+      />
+      <FlowPath
+        id="oil-drop-flow"
+        className="oil-flow"
+        path="M741 669 V806 Q741 842 776 842 H855"
+        count={3}
+        duration={1.7}
+      />
+      <FlowPath
+        id="oil-return-flow"
+        className="oil-flow"
+        path="M967 842 H1083 Q1115 842 1115 807 V665"
+        count={4}
+        duration={1.9}
+      />
+    </svg>
+  )
+}
+
+function FlowPath({
+  id,
+  className,
+  path,
+  count,
+  duration,
+}: {
+  id: string
+  className: 'air-flow' | 'oil-flow'
+  path: string
+  count: number
+  duration: number
+}) {
+  const offsets = Array.from({ length: count }, (_, index) => -(duration / count) * index)
+  return (
+    <g className={`flow-path ${className}`}>
+      <path id={id} d={path} />
+      {offsets.map((offset, index) => (
+        <circle key={index} r={className === 'air-flow' ? 6 : 5}>
+          <animateMotion dur={`${duration}s`} begin={`${offset}s`} repeatCount="indefinite">
+            <mpath href={`#${id}`} />
+          </animateMotion>
+        </circle>
       ))}
-    </div>
+    </g>
   )
 }
 

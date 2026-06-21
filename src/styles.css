@@ -581,6 +581,14 @@
   opacity: 1;
 }
 
+.mimic-flow-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .rotor-motion {
   position: absolute;
   left: 38.5%;
@@ -613,81 +621,32 @@
 }
 
 .mimic-motion-layer.idle .rotor,
-.mimic-motion-layer.idle .flow-track span {
+.mimic-motion-layer.idle .flow-path circle {
   animation-play-state: paused;
 }
 
-.flow-track {
-  --flow-color: #45aee2;
-  --flow-glow: rgba(69, 174, 226, 0.78);
-  position: absolute;
+.flow-path path {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 1;
 }
 
-.flow-track span {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--flow-color);
-  box-shadow: 0 0 7px var(--flow-glow);
-  offset-rotate: auto;
-  offset-distance: 0%;
-  animation: flowParticle 2.2s linear infinite;
-  animation-delay: calc(var(--flow-index) * -0.45s);
-  opacity: 0.86;
+.flow-path circle {
+  opacity: 0.94;
 }
 
-.flow-track span::after {
-  content: "";
-  position: absolute;
-  right: -5px;
-  top: 1px;
-  border-left: 6px solid var(--flow-color);
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
+.air-flow circle {
+  fill: #49b7ee;
+  filter: url("#air-flow-glow");
 }
 
-.air-intake span {
-  offset-path: path("M 72 54 L 228 54 Q 260 54 260 92 L 260 118");
+.oil-flow circle {
+  fill: #e0bf1f;
+  filter: url("#oil-flow-glow");
 }
 
-.air-discharge span {
-  offset-path: path("M 292 132 L 360 132 Q 382 132 394 116 L 440 94");
-}
-
-.air-cooler span {
-  offset-path: path("M 440 94 L 450 34 Q 456 18 476 18 L 586 18");
-}
-
-.oil-drop,
-.oil-return {
-  --flow-color: #d8b51f;
-  --flow-glow: rgba(216, 181, 31, 0.78);
-}
-
-.oil-drop span {
-  offset-path: path("M 276 146 L 276 194 Q 276 214 296 214");
-}
-
-.oil-return span {
-  offset-path: path("M 442 192 L 398 214 L 312 214 Q 276 214 276 166");
-}
-
-@keyframes flowParticle {
-  from {
-    offset-distance: 0%;
-    opacity: 0;
-  }
-
-  8%,
-  92% {
-    opacity: 1;
-  }
-
-  to {
-    offset-distance: 100%;
-    opacity: 0;
-  }
+.mimic-motion-layer.idle .flow-path circle {
+  opacity: 0;
 }
 
 @keyframes rotorSpin {
