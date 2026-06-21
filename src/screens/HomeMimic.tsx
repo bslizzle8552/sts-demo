@@ -105,16 +105,16 @@ function FlowOverlay() {
         duration={1.2}
       />
       <FlowPath
-        id="oil-drop-flow"
+        id="oil-sump-filter-flow"
         className="oil-flow"
-        path="M741 669 V806 Q741 842 776 842 H855"
+        path="M1115 665 V807 Q1115 842 1083 842 H967"
         count={3}
         duration={1.7}
       />
       <FlowPath
-        id="oil-return-flow"
+        id="oil-filter-airend-flow"
         className="oil-flow"
-        path="M967 842 H1083 Q1115 842 1115 807 V665"
+        path="M855 842 H776 Q741 842 741 806 V669"
         count={4}
         duration={1.9}
       />
@@ -140,7 +140,7 @@ function FlowPath({
     <g className={`flow-path ${className}`}>
       <path id={id} d={path} />
       {offsets.map((offset, index) => (
-        <circle key={index} r={className === 'air-flow' ? 6 : 5}>
+        <circle key={index} r={className === 'air-flow' ? 6 : 4}>
           <animateMotion dur={`${duration}s`} begin={`${offset}s`} repeatCount="indefinite">
             <mpath href={`#${id}`} />
           </animateMotion>

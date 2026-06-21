@@ -591,17 +591,17 @@
 
 .rotor-motion {
   position: absolute;
-  left: 38.5%;
-  top: 44%;
-  width: 16%;
-  height: 18%;
+  left: 34.4%;
+  top: 50.4%;
+  width: 13.8%;
+  height: 13.2%;
 }
 
 .rotor {
   position: absolute;
-  top: 18%;
+  top: 14%;
   width: 34%;
-  height: 62%;
+  height: 70%;
   border-radius: 50%;
   border: 3px solid rgba(37, 76, 91, 0.72);
   background:
@@ -641,8 +641,9 @@
 }
 
 .oil-flow circle {
-  fill: #e0bf1f;
+  fill: #bdd34a;
   filter: url("#oil-flow-glow");
+  opacity: 0.82;
 }
 
 .mimic-motion-layer.idle .flow-path circle {
