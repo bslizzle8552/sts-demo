@@ -1,5 +1,6 @@
 import { CapacityBar } from '../components/CapacityBar'
 import { ValueTile } from '../components/ValueTile'
+import type { CSSProperties } from 'react'
 import type { AppState, ScreenId } from '../types'
 
 interface HomeMimicProps {
@@ -10,6 +11,8 @@ interface HomeMimicProps {
 export function HomeMimic({ state, setScreen }: HomeMimicProps) {
   const r = state.readings
   const mimicAsset = `${import.meta.env.BASE_URL}assets/sts-mimic-generated.png`.replace(/\/{2,}/g, '/')
+  const running = !['INITIALIZING', 'MANUALLY STOPPED', 'STANDING BY', 'FAULTED'].includes(state.machineState)
+  const flowing = running && r.capacity > 0
   return (
     <div className="home-screen">
       <div className="sts-mimic">
@@ -35,6 +38,17 @@ export function HomeMimic({ state, setScreen }: HomeMimicProps) {
 
         <section className="sts-process-card">
           <img className="mimic-asset" src={mimicAsset} alt="" />
+          <div className={`mimic-motion-layer ${flowing ? 'flowing' : 'idle'}`} aria-hidden="true">
+            <div className="rotor-motion">
+              <span className="rotor rotor-a" />
+              <span className="rotor rotor-b" />
+            </div>
+            <FlowTrack className="air-intake" count={4} />
+            <FlowTrack className="air-discharge" count={3} />
+            <FlowTrack className="air-cooler" count={4} />
+            <FlowTrack className="oil-drop" count={3} />
+            <FlowTrack className="oil-return" count={5} />
+          </div>
           <ValueTile className="temp-readout" label="Discharge Temp" value={r.dischargeTemp.toFixed(0)} unit="F" tone={r.dischargeTemp > 210 ? 'warning' : 'normal'} />
           <ValueTile className="sump-readout" label="Sump Pressure" value={r.sumpPressure.toFixed(0)} unit="psig" />
           <ValueTile className="line-readout" label="Line Pressure" value={r.linePressure.toFixed(0)} unit="psig" />
@@ -43,6 +57,16 @@ export function HomeMimic({ state, setScreen }: HomeMimicProps) {
           <ValueTile className="sep-readout" label="Separator Delta" value={r.separatorDelta.toFixed(1)} unit="psi" tone={r.separatorDelta > 5 ? 'warning' : 'normal'} />
         </section>
       </div>
+    </div>
+  )
+}
+
+function FlowTrack({ className, count }: { className: string; count: number }) {
+  return (
+    <div className={`flow-track ${className}`}>
+      {Array.from({ length: count }, (_, index) => (
+        <span key={index} style={{ '--flow-index': index } as CSSProperties} />
+      ))}
     </div>
   )
 }

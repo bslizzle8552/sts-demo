@@ -563,6 +563,145 @@
   z-index: 1;
 }
 
+.mimic-motion-layer {
+  position: absolute;
+  left: 42px;
+  right: 38px;
+  top: 108px;
+  bottom: 18px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mimic-motion-layer.idle {
+  opacity: 0.18;
+}
+
+.mimic-motion-layer.flowing {
+  opacity: 1;
+}
+
+.rotor-motion {
+  position: absolute;
+  left: 38.5%;
+  top: 44%;
+  width: 16%;
+  height: 18%;
+}
+
+.rotor {
+  position: absolute;
+  top: 18%;
+  width: 34%;
+  height: 62%;
+  border-radius: 50%;
+  border: 3px solid rgba(37, 76, 91, 0.72);
+  background:
+    linear-gradient(45deg, transparent 0 38%, rgba(255, 255, 255, 0.72) 39% 45%, transparent 46%),
+    linear-gradient(-45deg, transparent 0 38%, rgba(31, 74, 92, 0.62) 39% 45%, transparent 46%);
+  box-shadow: 0 0 8px rgba(67, 166, 205, 0.55);
+}
+
+.rotor-a {
+  left: 17%;
+  animation: rotorSpin 0.8s linear infinite;
+}
+
+.rotor-b {
+  right: 17%;
+  animation: rotorSpinReverse 0.8s linear infinite;
+}
+
+.mimic-motion-layer.idle .rotor,
+.mimic-motion-layer.idle .flow-track span {
+  animation-play-state: paused;
+}
+
+.flow-track {
+  --flow-color: #45aee2;
+  --flow-glow: rgba(69, 174, 226, 0.78);
+  position: absolute;
+}
+
+.flow-track span {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--flow-color);
+  box-shadow: 0 0 7px var(--flow-glow);
+  offset-rotate: auto;
+  offset-distance: 0%;
+  animation: flowParticle 2.2s linear infinite;
+  animation-delay: calc(var(--flow-index) * -0.45s);
+  opacity: 0.86;
+}
+
+.flow-track span::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 1px;
+  border-left: 6px solid var(--flow-color);
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+}
+
+.air-intake span {
+  offset-path: path("M 72 54 L 228 54 Q 260 54 260 92 L 260 118");
+}
+
+.air-discharge span {
+  offset-path: path("M 292 132 L 360 132 Q 382 132 394 116 L 440 94");
+}
+
+.air-cooler span {
+  offset-path: path("M 440 94 L 450 34 Q 456 18 476 18 L 586 18");
+}
+
+.oil-drop,
+.oil-return {
+  --flow-color: #d8b51f;
+  --flow-glow: rgba(216, 181, 31, 0.78);
+}
+
+.oil-drop span {
+  offset-path: path("M 276 146 L 276 194 Q 276 214 296 214");
+}
+
+.oil-return span {
+  offset-path: path("M 442 192 L 398 214 L 312 214 Q 276 214 276 166");
+}
+
+@keyframes flowParticle {
+  from {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+
+  8%,
+  92% {
+    opacity: 1;
+  }
+
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes rotorSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotorSpinReverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
 .sts-process-card .value-tile {
   position: absolute;
   min-height: 0;
