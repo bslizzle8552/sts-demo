@@ -1,4 +1,4 @@
-import { defaultControlParameters, kwCurve } from '../data/machineProfile'
+import { defaultControlParameters, kwCurve, machineProfile } from '../data/machineProfile'
 import type { AppState, DemandLevel, EventRecord, MachineState, Readings, Severity, SimAction } from '../types'
 
 const transitionTimes: Partial<Record<MachineState, { next: MachineState; seconds: number }>> = {
@@ -30,7 +30,13 @@ export const initialState: AppState = {
     linePressure: 118,
     sumpPressure: 2,
     dischargeTemp: 88,
+    sumpTemp: 82,
+    fluidTemp: 84,
+    ambientTemp: 74,
     packageKw: 0,
+    machineCurrent: 0,
+    deliveryCfm: 0,
+    motorRpm: 0,
     capacity: 0,
     separatorDelta: 0.5,
     starts: 0,
@@ -143,6 +149,24 @@ function tick(state: AppState, dt: number): AppState {
     next = addEvent(transition(next, 'MANUALLY STOPPED'), 'INFO', 'Stopped', 'Unload stop complete')
   }
 
+  if (
+    next.machineState === 'RUNNING UNLOADED' &&
+    !next.stopRequested &&
+    next.controls.mode === 'AUTOMATIC' &&
+    next.elapsedInState >= next.controls.unloadTime &&
+    next.readings.linePressure > next.controls.loadPressure
+  ) {
+    next = addEvent(transition(next, 'STANDING BY'), 'INFO', 'Automatic Stop', 'Unload time expired')
+  }
+
+  if (
+    next.machineState === 'STANDING BY' &&
+    next.controls.mode === 'AUTOMATIC' &&
+    next.readings.linePressure <= Math.max(next.controls.restartPressure, next.controls.loadPressure)
+  ) {
+    next = addEvent({ ...transition(next, 'STARTING 1'), stopRequested: false }, 'INFO', 'Auto Restart', 'Restart pressure reached', `${next.readings.linePressure.toFixed(0)} psi`)
+  }
+
   if (next.machineState === 'RUNNING UNLOADED' && !next.stopRequested && next.readings.linePressure <= next.controls.loadPressure) {
     next = addEvent(transition(next, 'LOADING'), 'INFO', 'Loading', 'Line pressure below load pressure', `${next.readings.linePressure.toFixed(0)} psi`)
   }
@@ -163,6 +187,7 @@ function tick(state: AppState, dt: number): AppState {
     capacity: next.readings.capacity,
     kw: next.readings.packageKw,
     temp: next.readings.dischargeTemp,
+    current: next.readings.machineCurrent,
   }
   return { ...next, history: [...next.history.slice(-59), historyPoint] }
 }
@@ -192,9 +217,17 @@ function updateReadings(state: AppState, dt: number): Readings {
   const separatorDelta = state.flags.separatorWarning ? approach(state.readings.separatorDelta, 6.2, dt * 0.7) : loaded ? clamp(separatorNormal, 1.8, 3.2) : approach(state.readings.separatorDelta, stopped ? 0.2 : 0.5, dt * 0.7)
   const sumpTarget = loaded ? linePressure + separatorDelta + 4.5 : unloaded ? Math.max(0, linePressure * 0.35) : Math.max(0, linePressure * 0.08)
   const sumpPressure = approach(state.readings.sumpPressure, sumpTarget, dt * (loaded ? 4 : 8))
+  const ambientTemp = 74 + Math.sin(state.simTime * 0.012) * 2.4
   const tempTarget = state.flags.highDischargeTemp ? 245 : loaded ? 166 + capacity * 0.33 : running ? 130 : 92
   const dischargeTemp = approach(state.readings.dischargeTemp, tempTarget, dt * (running ? 4 : 2.2))
+  const fluidTempTarget = state.flags.highDischargeTemp ? 218 : loaded ? 140 + capacity * 0.22 : running ? 116 : ambientTemp + 10
+  const fluidTemp = approach(state.readings.fluidTemp, fluidTempTarget, dt * (running ? 2.7 : 1.6))
+  const sumpTemp = approach(state.readings.sumpTemp, Math.max(fluidTemp + 6, dischargeTemp - 18), dt * 2.6)
   const packageKw = loaded ? interpolateKw(capacity) : unloaded ? approach(state.readings.packageKw || 22.5, 25.5, dt * 3) : 0
+  const fullLoadAmps = machineProfile.packageAmpsAirCooled[460]
+  const machineCurrent = running ? clamp((packageKw / machineProfile.fullLoadPackageKw) * fullLoadAmps + Math.sin(state.simTime * 1.1) * 1.6, 24, fullLoadAmps * 1.08) : 0
+  const deliveryCfm = loaded ? (capacity / 100) * machineProfile.fullLoadCapacity : 0
+  const motorRpm = running ? machineProfile.motorRpm + Math.sin(state.simTime * 0.9) * 5 : 0
   const runHours = state.readings.runHours + (running ? dt / 3600 : 0)
   const loadedHours = state.readings.loadedHours + (loaded ? dt / 3600 : 0)
 
@@ -203,7 +236,13 @@ function updateReadings(state: AppState, dt: number): Readings {
     linePressure,
     sumpPressure,
     dischargeTemp,
+    sumpTemp,
+    fluidTemp,
+    ambientTemp,
     packageKw,
+    machineCurrent,
+    deliveryCfm,
+    motorRpm,
     capacity,
     separatorDelta,
     runHours,

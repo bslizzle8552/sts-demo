@@ -26,13 +26,41 @@ export type ScreenId =
   | 'maintenance'
   | 'login'
   | 'machine'
+  | 'controllerSoftware'
   | 'controls'
   | 'graphs'
   | 'warnings'
+  | 'recommendedService'
   | 'history'
   | 'package'
   | 'io'
+  | 'digitalDetails'
+  | 'analogDetails'
+  | 'sensorLogRate'
   | 'spiral'
+  | 'displayInfo'
+  | 'userPrefs'
+  | 'scheduling'
+  | 'emode'
+  | 'remote'
+  | 'ipi'
+  | 'timeDate'
+  | 'modbus'
+  | 'networking'
+  | 'currentTransducer'
+  | 'analogZeroTrim'
+  | 'initialization'
+  | 'register'
+  | 'signalAddress'
+  | 'maxUnload'
+  | 'machineProfiles'
+  | 'spiralSettings'
+  | 'softwareUpgrade'
+  | 'cleanDisplay'
+  | 'rebootDisplay'
+  | 'logFile'
+
+export type HomeScreenId = Extract<ScreenId, 'mimic' | 'analog' | 'multigauge'>
 
 export type Severity = 'INFO' | 'WARNING' | 'FAULT'
 export type DemandLevel = 'low' | 'normal' | 'high'
@@ -54,13 +82,24 @@ export interface ControlParameters {
   targetPressure: number
   modulation: string
   unloadTime: number
+  restartPressure: number
+  restartTime: number
+  drainInterval: number
+  drainTime: number
+  costPerKwh: number
 }
 
 export interface Readings {
   linePressure: number
   sumpPressure: number
   dischargeTemp: number
+  sumpTemp: number
+  fluidTemp: number
+  ambientTemp: number
   packageKw: number
+  machineCurrent: number
+  deliveryCfm: number
+  motorRpm: number
   capacity: number
   separatorDelta: number
   starts: number
@@ -89,7 +128,7 @@ export interface AppState {
   activeFaults: string[]
   elapsedInState: number
   eventCounter: number
-  history: Array<{ time: number; pressure: number; capacity: number; kw: number; temp: number }>
+  history: Array<{ time: number; pressure: number; capacity: number; kw: number; temp: number; current: number }>
   simTime: number
   stopRequested: boolean
 }

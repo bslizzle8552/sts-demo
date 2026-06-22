@@ -14,7 +14,7 @@ export function TopStatusBar({ state, title, isHome, canBack, onBack, onHome }: 
   return (
     <header className="top-status">
       <div className="brand-block">
-        {!isHome && <button className="top-nav-button back" type="button" onClick={onBack} disabled={!canBack}>BACK</button>}
+        {!isHome && <button className="top-nav-button back" type="button" onClick={onBack} disabled={!canBack} aria-label="Back">&lt;</button>}
         <div>
           <span className="brand">SULLAIR</span>
           <span className="model">SN7509S AC</span>
@@ -25,7 +25,7 @@ export function TopStatusBar({ state, title, isHome, canBack, onBack, onHome }: 
         <strong>{state.machineState}</strong>
       </div>
       <div className="status-block">
-        {!isHome && <button className="top-nav-button home" type="button" onClick={onHome}>HOME</button>}
+        {!isHome && <button className="top-nav-button home" type="button" onClick={onHome} aria-label="Home">HOME</button>}
         <span className={`status-pill ${faulted ? 'fault' : state.activeWarnings.length ? 'warning' : 'ok'}`}>
           {faulted ? 'FAULT' : state.activeWarnings.length ? 'WARNING' : 'READY'}
         </span>

@@ -1,59 +1,69 @@
-import { CapacityBar } from '../components/CapacityBar'
+import { useEffect, useState } from 'react'
 import type { AppState } from '../types'
 
-const bars = [
-  { key: 'dischargeTemp', label: 'Discharge Temperature', max: 300, unit: 'F' },
-  { key: 'linePressure', label: 'Line Pressure', max: 250, unit: 'psi' },
-  { key: 'sumpPressure', label: 'Sump Pressure', max: 250, unit: 'psi' },
-] as const
+interface HomeMultigaugeProps {
+  state: AppState
+  onBack: () => void
+  onEMode: () => void
+}
 
-export function HomeMultigauge({ state }: { state: AppState }) {
+export function HomeMultigauge({ state, onBack, onEMode }: HomeMultigaugeProps) {
+  const [now, setNow] = useState(() => new Date())
+  const r = state.readings
+  const multigaugeAsset = `${import.meta.env.BASE_URL}assets/sts-multigauge-manual-home-clean.png`.replace(/\/{2,}/g, '/')
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 1000)
+    return () => window.clearInterval(interval)
+  }, [])
+
   return (
-    <div className="sts-multigauge-screen">
-      <section className="sts-status-card multigauge-status">
-        <Status label="State" value={state.machineState} />
-        <Status label="Mode" value={state.controls.mode} />
-        <div className="status-pair">
-          <Status label="Load" value={state.readings.loadedHours.toFixed(2)} />
-          <Status label="Run" value={state.readings.runHours.toFixed(2)} />
-        </div>
-        <div className="status-pair">
-          <Status label="Starts" value={state.readings.starts} />
-          <Status label="Cycles" value={state.readings.loadCycles} />
-        </div>
-        <CapacityBar value={state.readings.capacity} />
-      </section>
-      <section className="vertical-gauge-bank">
-        {bars.map((bar) => {
-          const value = state.readings[bar.key]
-          const percent = Math.max(0, Math.min(100, (value / bar.max) * 100))
-          return (
-            <div className="vertical-gauge" key={bar.key}>
-              <h2>{bar.label}</h2>
-              <div className="vertical-track">
-                <div className="vertical-fill" style={{ height: `${percent}%` }} />
-                <div className="vertical-scale">
-                  <span>{bar.max}</span>
-                  <span>{Math.round(bar.max * 0.75)}</span>
-                  <span>{Math.round(bar.max * 0.5)}</span>
-                  <span>{Math.round(bar.max * 0.25)}</span>
-                  <span>0</span>
-                </div>
-              </div>
-              <strong>{value.toFixed(0)} {bar.unit}</strong>
-            </div>
-          )
-        })}
-      </section>
+    <div className="manual-reference-screen multigauge-reference-screen">
+      <img className="manual-reference-image" src={multigaugeAsset} alt="" />
+      <GaugeTitle className="multigauge-title-discharge" lines={['Discharge', 'Temperature']} />
+      <GaugeTitle className="multigauge-title-line" lines={['Line', 'Pressure']} />
+      <GaugeTitle className="multigauge-title-sump" lines={['Sump', 'Pressure']} />
+      <ManualField className="multigauge-field-state" value={state.machineState} />
+      <ManualField className="multigauge-field-mode" value={state.controls.mode} />
+      <ManualField className="multigauge-field-load" value={`${r.loadedHours.toFixed(2)} hrs`} />
+      <ManualField className="multigauge-field-run" value={`${r.runHours.toFixed(2)} hrs`} />
+      <ManualField className="multigauge-field-starts" value={r.starts.toString().padStart(3, '0')} />
+      <ManualField className="multigauge-field-cycles" value={r.loadCycles.toString().padStart(3, '0')} />
+      <div className="manual-capacity-mask multigauge-capacity-mask">
+        <div className="manual-capacity-fill" style={{ width: `${(Math.max(0, Math.min(140, r.capacity)) / 140) * 100}%` }} />
+      </div>
+      <VerticalFill className="multigauge-fill-discharge" value={r.dischargeTemp} max={300} />
+      <VerticalFill className="multigauge-fill-line" value={r.linePressure} max={250} />
+      <VerticalFill className="multigauge-fill-sump" value={r.sumpPressure} max={250} />
+      <button className="manual-back-button multigauge-back-button" type="button" onClick={onBack} aria-label="Back" />
+      <button className="multigauge-emode-button" type="button" onClick={onEMode} aria-label="E-Mode" />
+      <time className="manual-clock multigauge-clock" dateTime={now.toISOString()}>
+        <span>{now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</span>
+        <span>{now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}</span>
+      </time>
     </div>
   )
 }
 
-function Status({ label, value }: { label: string; value: string | number }) {
+function GaugeTitle({ className, lines }: { className: string; lines: string[] }) {
   return (
-    <div className="sts-status-field">
-      <span>{label}</span>
-      <strong>{value}</strong>
+    <div className={`multigauge-title ${className}`}>
+      {lines.map((line) => (
+        <span key={line}>{line}</span>
+      ))}
+    </div>
+  )
+}
+
+function ManualField({ className, value }: { className: string; value: string }) {
+  return <div className={`manual-field multigauge-field ${className}`}>{value}</div>
+}
+
+function VerticalFill({ className, value, max }: { className: string; value: number; max: number }) {
+  const height = `${Math.max(0, Math.min(100, (value / max) * 100))}%`
+  return (
+    <div className={`multigauge-fill-track ${className}`}>
+      <div style={{ height }} />
     </div>
   )
 }

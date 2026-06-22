@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react'
 import { BottomNav } from './components/BottomNav'
 import { HmiButton } from './components/HmiButton'
 import { TopStatusBar } from './components/TopStatusBar'
-import { maintenanceItems, systemConfigurationItems, systemInformationItems } from './data/menuItems'
+import { systemConfigurationItems, systemInformationItems } from './data/menuItems'
 import { ControlParameters } from './screens/ControlParameters'
 import { EventHistory } from './screens/EventHistory'
 import { Graphs } from './screens/Graphs'
@@ -13,12 +13,42 @@ import { HomeMultigauge } from './screens/HomeMultigauge'
 import { IOStatus } from './screens/IOStatus'
 import { MachineInformation } from './screens/MachineInformation'
 import { MainMenu } from './screens/MainMenu'
+import { MaintenanceMenu } from './screens/MaintenanceMenu'
 import { MenuCategory } from './screens/MenuCategory'
 import { PackageInformation } from './screens/PackageInformation'
-import { SpiralValveStatus } from './screens/SpiralValveStatus'
+import {
+  AnalogDetails,
+  AnalogZeroTrim,
+  CleanDisplay,
+  ControllerSoftware,
+  CurrentTransducerSettings,
+  DigitalIODetails,
+  DisplayInformation,
+  EModeSettings,
+  InitializationScreen,
+  IpiSettings,
+  LoginScreen,
+  LogFileScreen,
+  MachineProfiles,
+  MaxUnloadSettings,
+  ModbusSettings,
+  NetworkingSettings,
+  RebootDisplay,
+  RecommendedService,
+  RegisterScreen,
+  RemoteSettings,
+  Scheduling,
+  SensorLogRate,
+  SignalAddressSettings,
+  SoftwareUpgrade,
+  SpiralValveStatus,
+  SpiralValveSettings,
+  TimeDateSettings,
+  UserPreferences,
+} from './screens/ReferenceScreens'
 import { Warnings } from './screens/Warnings'
 import { initialState, simulate } from './sim/simulationEngine'
-import type { ScreenId } from './types'
+import type { HomeScreenId, ScreenId } from './types'
 import './styles.css'
 
 const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
@@ -43,20 +73,110 @@ const screenTitle: Record<ScreenId, string> = {
   maintenance: 'Maintenance',
   login: 'Log In',
   machine: 'Machine Information',
+  controllerSoftware: 'Controller & Software',
   controls: 'Control Parameters',
   graphs: 'Graphs',
   warnings: 'Warnings',
+  recommendedService: 'Recommended Service',
   history: 'Event History',
   package: 'Package Information',
   io: 'I/O Status',
+  digitalDetails: 'Digital I/O Details',
+  analogDetails: 'Analog Details',
+  sensorLogRate: 'Sensor Log Rate',
   spiral: 'Spiral Valve Status',
+  displayInfo: 'Display Information',
+  userPrefs: 'User Preferences',
+  scheduling: 'Scheduling',
+  emode: 'E-Mode',
+  remote: 'Remote',
+  ipi: 'IPI Setting',
+  timeDate: 'Time & Date',
+  modbus: 'Modbus Settings',
+  networking: 'Networking',
+  currentTransducer: 'Current Transducer Settings',
+  analogZeroTrim: 'Analog Zero Trim',
+  initialization: 'Initialization',
+  register: 'Register',
+  signalAddress: 'Signal Address Function',
+  maxUnload: 'Max Unload Settings',
+  machineProfiles: 'Machine Profiles',
+  spiralSettings: 'Spiral Valve Settings',
+  softwareUpgrade: 'Software Upgrade',
+  cleanDisplay: 'Clean Display',
+  rebootDisplay: 'Reboot Display',
+  logFile: 'Log File',
+}
+
+const screenIds = new Set<ScreenId>(Object.keys(screenTitle) as ScreenId[])
+const homeScreenIds = new Set<HomeScreenId>(['mimic', 'analog', 'multigauge'])
+const homeScreenStorageKey = 'sts.homeScreen'
+
+function readHomeScreenPreference(): HomeScreenId {
+  if (typeof window === 'undefined') return 'mimic'
+  const storedScreen = window.localStorage.getItem(homeScreenStorageKey)
+  return homeScreenIds.has(storedScreen as HomeScreenId) ? (storedScreen as HomeScreenId) : 'mimic'
+}
+
+function getInitialScreen(): ScreenId {
+  if (typeof window === 'undefined') return 'mimic'
+  const screen = new URLSearchParams(window.location.search).get('screen')
+  return screenIds.has(screen as ScreenId) ? (screen as ScreenId) : readHomeScreenPreference()
+}
+
+function getInitialHomeScreen(): HomeScreenId {
+  const initialScreen = getInitialScreen()
+  return homeScreenIds.has(initialScreen as HomeScreenId) ? (initialScreen as HomeScreenId) : readHomeScreenPreference()
 }
 
 function App() {
   const [state, dispatch] = useReducer(simulate, initialState)
-  const [screen, setScreen] = useState<ScreenId>('mimic')
+  const [screen, setScreen] = useState<ScreenId>(getInitialScreen)
+  const [homeScreen, setHomeScreen] = useState<HomeScreenId>(getInitialHomeScreen)
   const [screenHistory, setScreenHistory] = useState<ScreenId[]>([])
   const [trainerOpen, setTrainerOpen] = useState(false)
+  const isManualScreen =
+    screen === 'mimic' ||
+    screen === 'analog' ||
+    screen === 'multigauge' ||
+    screen === 'menu' ||
+    screen === 'systemInfo' ||
+    screen === 'systemConfig' ||
+    screen === 'maintenance' ||
+    screen === 'io' ||
+    screen === 'login' ||
+    screen === 'machine' ||
+    screen === 'controllerSoftware' ||
+    screen === 'controls' ||
+    screen === 'package' ||
+    screen === 'graphs' ||
+    screen === 'recommendedService' ||
+    screen === 'history' ||
+    screen === 'warnings' ||
+    screen === 'sensorLogRate' ||
+    screen === 'spiral' ||
+    screen === 'remote' ||
+    screen === 'ipi' ||
+    screen === 'timeDate' ||
+    screen === 'modbus' ||
+    screen === 'networking' ||
+    screen === 'currentTransducer' ||
+    screen === 'analogZeroTrim' ||
+    screen === 'initialization' ||
+    screen === 'register' ||
+    screen === 'signalAddress' ||
+    screen === 'maxUnload' ||
+    screen === 'machineProfiles' ||
+    screen === 'spiralSettings' ||
+    screen === 'softwareUpgrade' ||
+    screen === 'cleanDisplay' ||
+    screen === 'logFile' ||
+    screen === 'digitalDetails' ||
+    screen === 'analogDetails' ||
+    screen === 'displayInfo' ||
+    screen === 'userPrefs' ||
+    screen === 'scheduling' ||
+    screen === 'emode'
   const [panelScale, setPanelScale] = useState(getPanelScale)
   const stopLongPressTimer = useRef<number | null>(null)
   const stopLongPressFired = useRef(false)
@@ -65,6 +185,10 @@ function App() {
     const interval = window.setInterval(() => dispatch({ type: 'TICK', dt: 1 }), 1000)
     return () => window.clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem(homeScreenStorageKey, homeScreen)
+  }, [homeScreen])
 
   useEffect(() => {
     const updateScale = () => setPanelScale(getPanelScale())
@@ -92,8 +216,8 @@ function App() {
   }
 
   const goHome = () => {
-    setScreenHistory((history) => (screen === 'mimic' ? history : [...history, screen].slice(-20)))
-    setScreen('mimic')
+    setScreenHistory((history) => (screen === homeScreen ? history : [...history, screen].slice(-20)))
+    setScreen(homeScreen)
   }
 
   const clearStopLongPress = () => {
@@ -126,39 +250,91 @@ function App() {
   const currentScreen = (() => {
     switch (screen) {
       case 'mimic':
-        return <HomeMimic state={state} setScreen={navigate} />
+        return <HomeMimic state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} />
       case 'analog':
-        return <HomeAnalog state={state} />
+        return <HomeAnalog state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} />
       case 'multigauge':
-        return <HomeMultigauge state={state} />
+        return <HomeMultigauge state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} onEMode={() => navigate('emode')} />
       case 'menu':
-        return <MainMenu setScreen={navigate} />
+        return <MainMenu linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : goHome} onHome={goHome} setScreen={navigate} />
       case 'systemInfo':
-        return <MenuCategory title="System Information" items={systemInformationItems} setScreen={navigate} />
+        return <MenuCategory title="System Information" items={systemInformationItems} linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} onHome={goHome} setScreen={navigate} />
       case 'systemConfig':
-        return <MenuCategory title="System Configuration" items={systemConfigurationItems} setScreen={navigate} />
+        return <MenuCategory title="System Configuration" items={systemConfigurationItems} linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} onHome={goHome} setScreen={navigate} />
       case 'maintenance':
-        return <MenuCategory title="Maintenance" items={maintenanceItems} setScreen={navigate} />
+        return <MaintenanceMenu linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('menu')} onHome={goHome} setScreen={navigate} />
       case 'login':
-        return <MenuCategory title="Log In" items={[{ label: 'User', disabled: true }, { label: 'Distributor', disabled: true }, { label: 'Technician', disabled: true }]} setScreen={navigate} />
+        return <LoginScreen onBack={screenHistory.length > 0 ? goBack : goHome} onHome={goHome} />
       case 'machine':
-        return <MachineInformation />
+        return <MachineInformation state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
+      case 'controllerSoftware':
+        return <ControllerSoftware linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
       case 'controls':
-        return <ControlParameters state={state} dispatch={dispatch} />
+        return <ControlParameters state={state} dispatch={dispatch} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
       case 'graphs':
-        return <Graphs state={state} />
+        return <Graphs state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
       case 'warnings':
-        return <Warnings state={state} />
+        return <Warnings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('maintenance')} onHome={goHome} />
+      case 'recommendedService':
+        return <RecommendedService state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('maintenance')} onHome={goHome} />
       case 'history':
-        return <EventHistory state={state} />
+        return <EventHistory state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('maintenance')} onHome={goHome} />
       case 'package':
-        return <PackageInformation />
+        return <PackageInformation linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
       case 'io':
-        return <IOStatus state={state} />
+        return <IOStatus state={state} onBack={screenHistory.length > 0 ? goBack : goHome} onHome={goHome} />
+      case 'digitalDetails':
+        return <DigitalIODetails state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
+      case 'analogDetails':
+        return <AnalogDetails state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
+      case 'sensorLogRate':
+        return <SensorLogRate linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
       case 'spiral':
-        return <SpiralValveStatus state={state} />
+        return <SpiralValveStatus state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
+      case 'displayInfo':
+        return <DisplayInformation linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemInfo')} onHome={goHome} />
+      case 'userPrefs':
+        return <UserPreferences linePressure={state.readings.linePressure} homeScreen={homeScreen} setHomeScreen={setHomeScreen} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'scheduling':
+        return <Scheduling linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'emode':
+        return <EModeSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'remote':
+        return <RemoteSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'ipi':
+        return <IpiSettings linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'timeDate':
+        return <TimeDateSettings linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'modbus':
+        return <ModbusSettings linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'networking':
+        return <NetworkingSettings linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'currentTransducer':
+        return <CurrentTransducerSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'analogZeroTrim':
+        return <AnalogZeroTrim state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'initialization':
+        return <InitializationScreen state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'register':
+        return <RegisterScreen state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'signalAddress':
+        return <SignalAddressSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'maxUnload':
+        return <MaxUnloadSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'machineProfiles':
+        return <MachineProfiles state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'spiralSettings':
+        return <SpiralValveSettings state={state} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'softwareUpgrade':
+        return <SoftwareUpgrade linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('systemConfig')} onHome={goHome} />
+      case 'cleanDisplay':
+        return <CleanDisplay onBack={screenHistory.length > 0 ? goBack : () => navigate('maintenance')} />
+      case 'rebootDisplay':
+        return <RebootDisplay onHome={goHome} />
+      case 'logFile':
+        return <LogFileScreen linePressure={state.readings.linePressure} onBack={screenHistory.length > 0 ? goBack : () => navigate('maintenance')} onHome={goHome} />
       default:
-        return <HomeMimic state={state} setScreen={navigate} />
+        return <HomeMimic state={state} onBack={goBack} />
     }
   })()
 
@@ -176,14 +352,13 @@ function App() {
             '--led-red-image': `url('${assetUrl('assets/panel/led-red.png')}')`,
             '--brand-badge-image': `url('${assetUrl('assets/panel/brand-badge.png')}')`,
             '--estop-button-image': `url('${assetUrl('assets/panel/estop-button.png')}')`,
-            '--gauge-face-image': `url('${assetUrl('assets/panel/gauge-face.png')}')`,
           } as CSSProperties
         }
       >
       <section className="touch-bezel">
-        <div className="hmi-shell">
-          <TopStatusBar state={state} title={screenTitle[screen]} isHome={screen === 'mimic'} canBack={screenHistory.length > 0} onBack={goBack} onHome={goHome} />
-          <main className={`screen-frame ${trainerOpen ? 'trainer-open' : ''}`}>
+        <div className={`hmi-shell ${isManualScreen ? 'manual-home-shell' : ''}`}>
+          {!isManualScreen && <TopStatusBar state={state} title={screenTitle[screen]} isHome={false} canBack={screenHistory.length > 0} onBack={goBack} onHome={goHome} />}
+          <main className={`screen-frame ${isManualScreen ? 'manual-home-frame' : ''} ${trainerOpen ? 'trainer-open' : ''}`}>
             <section className="screen-body">{currentScreen}</section>
             {trainerOpen && (
               <aside className="trainer open">
@@ -220,7 +395,7 @@ function App() {
               </aside>
             )}
           </main>
-          <BottomNav active={screen} onNavigate={navigate} />
+          {!isManualScreen && <BottomNav active={screen} state={state} onNavigate={navigate} />}
         </div>
       </section>
       <aside className="hardware-panel">
